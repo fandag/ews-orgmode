@@ -29,6 +29,7 @@ timezoneLocation = config.get('ews-orgmode', 'timezone')
 daysHistory = config.getint('ews-orgmode', 'days_history')
 daysFuture = config.getint('ews-orgmode', 'days_future')
 maxEntries = config.getint('ews-orgmode', 'max_entries')
+orgfile = config.get('ews-orgmode', 'orgfile')
 
 
 def find_subelement(element, subelement):
@@ -65,19 +66,21 @@ def print_orgmode_entry(subject, start, end, location, response):
         dateStr = ("<" + format_orgmode_date(startDate) + ">--<"
                    + format_orgmode_date(endDate) + ">")
 
+    entry = "* "
     if subject is not None:
-        print "* " + subject.encode('utf-8', 'ignore')
+        entry += subject.encode('utf-8', 'ignore') + '\n'
 
     if location is not None:
-        print ":PROPERTIES:"
-        print ":LOCATION: " + location.encode('utf-8')
-        print ":RESPONSE: " + response.encode('utf-8')
-        print ":END:"
+        entry += ":PROPERTIES:\n"
+        entry += ":LOCATION: " + location.encode('utf-8') + '\n'
+        entry += ":RESPONSE: " + response.encode('utf-8') + '\n'
+        entry += ":END:\n"
 
     if dateStr != "":
-        print dateStr
+        entry += dateStr + '\n'
 
-    print ""
+    return entry
+
 
 # Debug code
 # print_orgmode_entry("subject", "2012-07-27T11:10:53Z",
@@ -143,15 +146,17 @@ namespaces = {
 
 # Print calendar elements
 elements = root.xpath(xpathStr, namespaces=namespaces)
-for element in elements:
-    subject = find_subelement(element, '{http://schemas.microsoft.com'
-                              '/exchange/services/2006/types}Subject')
-    location = find_subelement(element, '{http://schemas.microsoft.com'
-                               '/exchange/services/2006/types}Location')
-    start = find_subelement(element, '{http://schemas.microsoft.com'
-                            '/exchange/services/2006/types}Start')
-    end = find_subelement(element, '{http://schemas.microsoft.com'
-                          '/exchange/services/2006/types}End')
-    response = find_subelement(element, '{http://schemas.microsoft.com/'
-                               'exchange/services/2006/types}MyResponseType')
-    print_orgmode_entry(subject, start, end, location, response)
+with open(orgfile, 'w') as fid:
+    for element in elements:
+        subject = find_subelement(element, '{http://schemas.microsoft.com'
+                                  '/exchange/services/2006/types}Subject')
+        location = find_subelement(element, '{http://schemas.microsoft.com'
+                                   '/exchange/services/2006/types}Location')
+        start = find_subelement(element, '{http://schemas.microsoft.com'
+                                '/exchange/services/2006/types}Start')
+        end = find_subelement(element, '{http://schemas.microsoft.com'
+                              '/exchange/services/2006/types}End')
+        response = find_subelement(element, '{http://schemas.microsoft.com/'
+                                   'exchange/services/2006/types}'
+                                   'MyResponseType')
+        fid.write(print_orgmode_entry(subject, start, end, location, response))
