@@ -31,6 +31,11 @@ daysFuture = config.getint('ews-orgmode', 'days_future')
 maxEntries = config.getint('ews-orgmode', 'max_entries')
 
 
+def find_subelement(element, subelement):
+    sub = element.find(subelement)
+    return sub.text if sub is not None else None
+
+
 def parse_ews_date(dateStr):
     d = datetime.strptime(dateStr, "%Y-%m-%dT%H:%M:%SZ")
     exchangeTz = pytz.utc
@@ -139,14 +144,14 @@ namespaces = {
 # Print calendar elements
 elements = root.xpath(xpathStr, namespaces=namespaces)
 for element in elements:
-    subject = element.find('{http://schemas.microsoft.com/exchange/services'
-                           '/2006/types}Subject').text
-    location = element.find('{http://schemas.microsoft.com/exchange/services'
-                            '/2006/types}Location').text
-    start = element.find('{http://schemas.microsoft.com/exchange/services'
-                         '/2006/types}Start').text
-    end = element.find('{http://schemas.microsoft.com/exchange/services'
-                       '/2006/types}End').text
-    response = element.find('{http://schemas.microsoft.com/exchange/services'
-                            '/2006/types}MyResponseType').text
+    subject = find_subelement(element, '{http://schemas.microsoft.com'
+                              '/exchange/services/2006/types}Subject')
+    location = find_subelement(element, '{http://schemas.microsoft.com'
+                               '/exchange/services/2006/types}Location')
+    start = find_subelement(element, '{http://schemas.microsoft.com'
+                            '/exchange/services/2006/types}Start')
+    end = find_subelement(element, '{http://schemas.microsoft.com'
+                          '/exchange/services/2006/types}End')
+    response = find_subelement(element, '{http://schemas.microsoft.com/'
+                               'exchange/services/2006/types}MyResponseType')
     print_orgmode_entry(subject, start, end, location, response)
